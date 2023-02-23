@@ -1,0 +1,25 @@
+WordTry {
+    layout: grid;
+    grid-size: 4;
+    grid-columns: 4fr 1fr 1fr 1fr;
+    background: $boost;
+    height: 5;
+    margin: 1;
+    min-width: 50;
+    padding: 1;
+}
+
+ResultDisplay{
+    content-align: center middle;
+    height: 3;
+}
+
+WordDisplay {
+    content-align: left middle;
+    height: 3;
+}
+
+Button {
+    width: 80%;
+    height: 100%;
+}
