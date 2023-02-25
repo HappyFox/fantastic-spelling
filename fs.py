@@ -8,6 +8,7 @@ from textual.containers import Container
 from textual.message import Message, MessageTarget
 from textual.reactive import reactive
 from textual.widgets import Button, Header, Footer, Static
+from textual import events
 
 
 WORD_LIST = [
@@ -107,13 +108,18 @@ class FansticSpellingApp(App):
         self.tts.say(self.current_word)
 
     def action_check_word(self) -> None:
-        if self.tts.isBusy():
-            return
-        self.tts.say(self.current_word)
-
         word_try = self.query_one("WordTry.active")
-        word_try.set_word("booya")
-        word_try.remove_active()
+
+        guess = word_try.get_word()
+
+        if self.current_word == guess:
+            self.tts.say("You are right!")
+            word_try.log_pass()
+            return
+
+        self.tts.say("You are incorrect!")
+        if word_try.log_error():
+            self.tts.say("Need new word")
 
     def on_mount(self) -> None:
         self.init_tts()
@@ -125,12 +131,12 @@ class FansticSpellingApp(App):
         new_word = WordTry()
         new_word.set_active()
         self.query_one("#word_list").mount(new_word)
-        new_word.scroll_visible()
+        new_word.focus()
 
     def init_tts(self) -> None:
         self.tts = pyttsx3.init()
         self.tts.startLoop(False)
-        self.tts.setProperty("rate", 120)
+        self.tts.setProperty("rate", 175)
 
         async def pump_tts():
             while True:
@@ -146,6 +152,19 @@ class FansticSpellingApp(App):
         yield Header()
         yield Footer()
         yield Container(id="word_list")
+
+    def on_key(self, event: events.Key) -> None:
+        if event.character.isalpha():
+            word_try = self.query_one("WordTry.active")
+            self.tts.say(event.character)
+            word = word_try.get_word()
+            word += event.character
+            word_try.set_word(word)
+        elif event.key == "backspace":
+            word_try = self.query_one("WordTry.active")
+            word = word_try.get_word()
+            word = word[:-1]
+            word_try.set_word(word)
 
     def on_say(self, message: Say) -> None:
         if self.tts.isBusy() and not message.queue:
