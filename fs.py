@@ -36,36 +36,94 @@ class Say(Message):
 class ResultDisplay(Static):
     "to display the current guess"
 
+    result_str = reactive("• • •")
+
+    def log_error(self) -> bool:
+        self.result_str = self.result_str.replace("•", "❌", 1)
+
+        if self.result_str[-1] == "❌":
+            return True
+        return False
+
+    def log_pass(self) -> None:
+        self.result_str = self.result_str.replace("•", "✅", 1)
+
+    def render(self) -> str:
+        return f"{self.result_str}"
+
 
 class WordDisplay(Static):
     "display the current wrong/right guesses."
 
+    word = reactive("")
+    cursor = reactive(True)
+
+    def render(self) -> str:
+        disp_txt = self.word
+        if self.cursor:
+            disp_txt += "_"
+
+        return disp_txt
+
 
 class WordTry(Static):
+    def set_active(self):
+        self.add_class("active")
+
+    def remove_active(self):
+        self.remove_class("active")
+        self.add_class("disabled")
+        self.query_one(WordDisplay).cursor = False
+
+    def log_error(self) -> bool:
+        return self.query_one(ResultDisplay).log_error()
+
+    def log_pass(self) -> bool:
+        self.query_one(ResultDisplay).log_pass()
+
+    def get_word(self) -> str:
+        return self.query_one(WordDisplay).word
+
+    def set_word(self, word) -> None:
+        self.query_one(WordDisplay).word = word
+
     def compose(self) -> ComposeResult:
-        yield WordDisplay("_333", id="word_display")
-        yield ResultDisplay("• • •", id="results")
+        yield WordDisplay(id="word_display")
+        yield ResultDisplay(id="results")
 
 
 class FansticSpellingApp(App):
     """A Textual app to manage stopwatches."""
 
     CSS_PATH = "fs.css"
-    BINDINGS = [("space", "say_word", "Say current word")]
+    BINDINGS = [
+        ("space", "say_word", "Say current word"),
+        ("enter", "check_word", "Check you have the word correct."),
+    ]
 
     def action_say_word(self) -> None:
         if self.tts.isBusy():
             return
         self.tts.say(self.current_word)
 
+    def action_check_word(self) -> None:
+        if self.tts.isBusy():
+            return
+        self.tts.say(self.current_word)
+
+        word_try = self.query_one("WordTry.active")
+        word_try.set_word("booya")
+        word_try.remove_active()
+
     def on_mount(self) -> None:
         self.init_tts()
         self.words = copy.copy(WORD_LIST)
-        self.add_word()
+        self.next_word()
 
-    def add_word(self):
+    def next_word(self):
         self.current_word = self.words.pop(0)
         new_word = WordTry()
+        new_word.set_active()
         self.query_one("#word_list").mount(new_word)
         new_word.scroll_visible()
 
