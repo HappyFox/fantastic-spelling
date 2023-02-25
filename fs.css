@@ -1,7 +1,7 @@
 WordTry {
     layout: grid;
-    grid-size: 4;
-    grid-columns: 4fr 1fr 1fr 1fr;
+    grid-size: 2;
+    grid-columns: 4fr 1fr;
     background: $boost;
     height: 5;
     margin: 1;
@@ -15,7 +15,7 @@ ResultDisplay{
 }
 
 WordDisplay {
-    content-align: left middle;
+    content-align: center middle;
     height: 3;
 }
 
