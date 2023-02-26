@@ -166,7 +166,7 @@ class FansticSpellingApp(App):
         yield Container(id="word_list")
 
     def on_key(self, event: events.Key) -> None:
-        if event.character.isalpha():
+        if event.character and event.character.isalpha():
             word_try = self.query_one("WordTry.active")
             self.say(event.character, True)
             word = word_try.get_word()
