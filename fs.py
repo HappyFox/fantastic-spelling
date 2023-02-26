@@ -105,7 +105,7 @@ class FansticSpellingApp(App):
     def action_say_word(self) -> None:
         if self.tts.isBusy():
             return
-        self.tts.say(self.current_word)
+        self.say(self.current_word)
 
     async def action_check_word(self) -> None:
         word_try = self.query_one("WordTry.active")
@@ -113,12 +113,12 @@ class FansticSpellingApp(App):
         guess = word_try.get_word()
 
         if self.current_word == guess:
-            self.tts.say("You are correct!")
+            self.say("You are correct!", True)
             word_try.log_pass()
             word_try.remove_active()
 
         else:
-            self.tts.say("You are wrong!")
+            self.say("You are wrong!", True)
 
             if not word_try.log_error():
                 return
@@ -127,7 +127,7 @@ class FansticSpellingApp(App):
                 f", Capital {x}" if x.isupper() else f", {x}" for x in self.current_word
             ]
             long_form = "".join(long_form)
-            self.tts.say(f"You spell {self.current_word}: {long_form}.")
+            self.say(f"You spell {self.current_word}: {long_form}.", True)
 
             self.words.append(self.current_word)
 
@@ -137,7 +137,7 @@ class FansticSpellingApp(App):
             self.next_word()
             return
 
-        self.tts.say("Practice complete, good job mate!")
+        self.say("Practice complete, good job mate!")
 
         while self.tts.isBusy():
             await asyncio.sleep(0.1)
@@ -151,7 +151,7 @@ class FansticSpellingApp(App):
 
     def next_word(self):
         self.current_word = self.words.pop(0)
-        self.tts.say(f"Please spell {self.current_word}.")
+        self.say(f"Please spell {self.current_word}.", True)
         new_word = WordTry()
         new_word.set_active()
         self.query_one("#word_list").mount(new_word)
@@ -181,7 +181,7 @@ class FansticSpellingApp(App):
     def on_key(self, event: events.Key) -> None:
         if event.character.isalpha():
             word_try = self.query_one("WordTry.active")
-            self.tts.say(event.character)
+            self.say(event.character, True)
             word = word_try.get_word()
             word += event.character
             word_try.set_word(word)
@@ -191,10 +191,13 @@ class FansticSpellingApp(App):
             word = word[:-1]
             word_try.set_word(word)
 
-    def on_say(self, message: Say) -> None:
-        if self.tts.isBusy() and not message.queue:
+    def say(self, text, queue=False):
+        if self.tts.isBusy() and not queue:
             return
-        self.tts.say(message.text)
+        asyncio.create_task(asyncio.to_thread(self.tts.say, text))
+
+    def on_say(self, message: Say) -> None:
+        self.say(message.text, message.queue)
 
 
 if __name__ == "__main__":
