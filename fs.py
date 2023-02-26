@@ -179,10 +179,7 @@ class FansticSpellingApp(App):
             word_try.set_word(word)
 
     def say(self, text, queue=False):
-        # if self.tts.isBusy() and not queue:
-        #    return
-        # asyncio.create_task(asyncio.to_thread(self.tts.say, text))
-        voice.say(text)
+        voice.say(text, queue)
 
     def on_say(self, message: Say) -> None:
         self.say(message.text, message.queue)

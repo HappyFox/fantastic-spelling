@@ -13,7 +13,7 @@ def _process_utterances(queue):
     tts.setProperty("rate", 175)
 
     while True:
-        utterance = _queue.get()
+        utterance = queue.get()
         if not utterance:
             queue.close()
             return  # queue closed, go home.
@@ -28,7 +28,9 @@ def start():
     _voice_process.start()
 
 
-def say(utterance):
+def say(utterance, queue=False):
+    if not _queue.empty() and not queue:
+        return
     _queue.put_nowait(utterance)
 
 
