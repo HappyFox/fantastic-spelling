@@ -121,7 +121,9 @@ class FansticSpellingApp(App):
 
         self.tts.say("You are wrong!")
         if word_try.log_error():
-            long_form = [f", {x}" for x in self.current_word]
+            long_form = [
+                f", Capital {x}" if x.isupper() else f", {x}" for x in self.current_word
+            ]
             long_form = "".join(long_form)
 
             self.tts.say(f"You spell {self.current_word}: {long_form}.")
@@ -140,6 +142,7 @@ class FansticSpellingApp(App):
         new_word.set_active()
         self.query_one("#word_list").mount(new_word)
         new_word.focus()
+        new_word.scroll_visible()
 
     def init_tts(self) -> None:
         self.tts = pyttsx3.init()
