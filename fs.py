@@ -113,13 +113,21 @@ class FansticSpellingApp(App):
         guess = word_try.get_word()
 
         if self.current_word == guess:
-            self.tts.say("You are right!")
+            self.tts.say("You are correct!")
             word_try.log_pass()
+            word_try.remove_active()
+            self.next_word()
             return
 
-        self.tts.say("You are incorrect!")
+        self.tts.say("You are wrong!")
         if word_try.log_error():
-            self.tts.say("Need new word")
+            long_form = [f", {x}" for x in self.current_word]
+            long_form = "".join(long_form)
+
+            self.tts.say(f"You spell {self.current_word}: {long_form}.")
+            self.words.append(self.current_word)
+            word_try.remove_active()
+            self.next_word()
 
     def on_mount(self) -> None:
         self.init_tts()
