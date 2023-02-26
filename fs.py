@@ -107,7 +107,7 @@ class FansticSpellingApp(App):
             return
         self.tts.say(self.current_word)
 
-    def action_check_word(self) -> None:
+    async def action_check_word(self) -> None:
         word_try = self.query_one("WordTry.active")
 
         guess = word_try.get_word()
@@ -116,20 +116,33 @@ class FansticSpellingApp(App):
             self.tts.say("You are correct!")
             word_try.log_pass()
             word_try.remove_active()
-            self.next_word()
-            return
 
-        self.tts.say("You are wrong!")
-        if word_try.log_error():
+        else:
+            self.tts.say("You are wrong!")
+
+            if not word_try.log_error():
+                return
+
             long_form = [
                 f", Capital {x}" if x.isupper() else f", {x}" for x in self.current_word
             ]
             long_form = "".join(long_form)
-
             self.tts.say(f"You spell {self.current_word}: {long_form}.")
+
             self.words.append(self.current_word)
+
             word_try.remove_active()
+
+        if self.words:
             self.next_word()
+            return
+
+        self.tts.say("Practice complete, good job mate!")
+
+        while self.tts.isBusy():
+            await asyncio.sleep(0.1)
+
+        self.exit("Good Job Ada! Well done!")
 
     def on_mount(self) -> None:
         self.init_tts()
@@ -138,6 +151,7 @@ class FansticSpellingApp(App):
 
     def next_word(self):
         self.current_word = self.words.pop(0)
+        self.tts.say(f"Please spell {self.current_word}.")
         new_word = WordTry()
         new_word.set_active()
         self.query_one("#word_list").mount(new_word)
