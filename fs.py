@@ -1,7 +1,7 @@
 import asyncio
 import copy
 
-import pyttsx3
+# import pyttsx3
 
 from textual.app import App, ComposeResult
 from textual.containers import Container
@@ -10,6 +10,7 @@ from textual.reactive import reactive
 from textual.widgets import Button, Header, Footer, Static
 from textual import events
 
+import voice
 
 WORD_LIST = [
     "March",
@@ -103,8 +104,6 @@ class FansticSpellingApp(App):
     ]
 
     def action_say_word(self) -> None:
-        if self.tts.isBusy():
-            return
         self.say(self.current_word)
 
     async def action_check_word(self) -> None:
@@ -138,11 +137,10 @@ class FansticSpellingApp(App):
             return
 
         self.say("Practice complete, good job mate!")
-
-        while self.tts.isBusy():
-            await asyncio.sleep(0.1)
-
         self.exit("Good Job Ada! Well done!")
+
+    def on_unmount(self) -> None:
+        voice.stop()
 
     def on_mount(self) -> None:
         self.init_tts()
@@ -159,18 +157,7 @@ class FansticSpellingApp(App):
         new_word.scroll_visible()
 
     def init_tts(self) -> None:
-        self.tts = pyttsx3.init()
-        self.tts.startLoop(False)
-        self.tts.setProperty("rate", 175)
-
-        async def pump_tts():
-            while True:
-                if self.tts.isBusy():
-                    self.tts.iterate()
-                await asyncio.sleep(0)
-
-        asyncio.create_task(pump_tts())
-        self.tts.iterate()
+        voice.start()
 
     def compose(self) -> ComposeResult:
         """Called to add widgets to the app."""
@@ -192,9 +179,10 @@ class FansticSpellingApp(App):
             word_try.set_word(word)
 
     def say(self, text, queue=False):
-        if self.tts.isBusy() and not queue:
-            return
-        asyncio.create_task(asyncio.to_thread(self.tts.say, text))
+        # if self.tts.isBusy() and not queue:
+        #    return
+        # asyncio.create_task(asyncio.to_thread(self.tts.say, text))
+        voice.say(text)
 
     def on_say(self, message: Say) -> None:
         self.say(message.text, message.queue)
