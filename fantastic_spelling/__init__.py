@@ -13,8 +13,6 @@ import fantastic_spelling.voice as voice
 
 WORD_LIST = [
     "March",
-]
-eh = [
     "horse",
     "store",
     "large",
