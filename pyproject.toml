@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "fantastic-spelling"
+version = "0.1.0"
+description = "To practice spelling, using a voice to say it, then you spell it."
+authors = ["Keith Baston <keith.baston@gmail.com>"]
+readme = "README.md"
+packages = [{include = "fantastic_spelling"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+textual = "^0.12.1"
+pyttsx3 = "^2.90"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+fan = "fantastic_spelling:run"

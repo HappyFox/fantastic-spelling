@@ -1,7 +1,6 @@
 import asyncio
 import copy
 
-# import pyttsx3
 
 from textual.app import App, ComposeResult
 from textual.containers import Container
@@ -10,10 +9,12 @@ from textual.reactive import reactive
 from textual.widgets import Button, Header, Footer, Static
 from textual import events
 
-import voice
+import fantastic_spelling.voice as voice
 
 WORD_LIST = [
     "March",
+]
+eh = [
     "horse",
     "store",
     "large",
@@ -136,7 +137,10 @@ class FansticSpellingApp(App):
             self.next_word()
             return
 
-        self.say("Practice complete, good job mate!")
+        self.say("Practice complete, good job mate!", True)
+
+        await voice.speach_finished()
+
         self.exit("Good Job Ada! Well done!")
 
     def on_unmount(self) -> None:
@@ -185,6 +189,10 @@ class FansticSpellingApp(App):
         self.say(message.text, message.queue)
 
 
-if __name__ == "__main__":
+def run():
     app = FansticSpellingApp()
     app.run()
+
+
+if __name__ == "__main__":
+    run()
