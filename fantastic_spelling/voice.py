@@ -39,8 +39,8 @@ def is_busy():
     return _running_event.is_set()
 
 
-async def speach_finished():
-    await asyncio.sleep(0)
+async def speech_finished():
+    await asyncio.sleep(0.1)
     while is_busy():
         await asyncio.sleep(0.1)
 

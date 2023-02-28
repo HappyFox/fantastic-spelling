@@ -12,18 +12,18 @@ from textual import events
 import fantastic_spelling.voice as voice
 
 WORD_LIST = [
-    "March",
-    "horse",
-    "store",
-    "large",
-    "October",
-    "forty",
-    "before",
-    "north",
-    "fourteen",
-    "climb",
-    "prove",
-    "fourth",
+    "wait",
+    "May",
+    "Thursday",
+    "Saturday",
+    "main",
+    "hair",
+    "over",
+    "those",
+    "Monday",
+    "none",
+    "eighteen",
+    "straight",
 ]
 
 
@@ -68,6 +68,21 @@ class WordDisplay(Static):
 
 
 class WordTry(Static):
+    def __init__(self, word):
+        self._word = word
+        self.word_display = WordDisplay(id="word_display")
+        super().__init__()
+
+    def on_mount(self):
+        self.set_word(self._word)
+
+        async def word_reset():
+            voice.say(spell_word(self._word), True)
+            await voice.speech_finished()
+            self.set_word("")
+
+        asyncio.create_task(word_reset())
+
     def set_active(self):
         self.add_class("active")
 
@@ -83,14 +98,19 @@ class WordTry(Static):
         self.query_one(ResultDisplay).log_pass()
 
     def get_word(self) -> str:
-        return self.query_one(WordDisplay).word
+        return self.word_display.word
 
     def set_word(self, word) -> None:
-        self.query_one(WordDisplay).word = word
+        self.word_display.word = word
 
     def compose(self) -> ComposeResult:
-        yield WordDisplay(id="word_display")
+        yield self.word_display
         yield ResultDisplay(id="results")
+
+
+def spell_word(word):
+    long_form = [f", Capital {x}" if x.isupper() else f", {x}" for x in word]
+    return "".join(long_form)
 
 
 class FansticSpellingApp(App):
@@ -121,11 +141,9 @@ class FansticSpellingApp(App):
             if not word_try.log_error():
                 return
 
-            long_form = [
-                f", Capital {x}" if x.isupper() else f", {x}" for x in self.current_word
-            ]
-            long_form = "".join(long_form)
-            self.say(f"You spell {self.current_word}: {long_form}.", True)
+            self.say(
+                f"You spell {self.current_word}: {spell_word(self.current_word)}.", True
+            )
 
             self.words.append(self.current_word)
 
@@ -137,7 +155,7 @@ class FansticSpellingApp(App):
 
         self.say("Practice complete, good job mate!", True)
 
-        await voice.speach_finished()
+        await voice.speech_finished()
 
         self.exit("Good Job Ada! Well done!")
 
@@ -152,7 +170,7 @@ class FansticSpellingApp(App):
     def next_word(self):
         self.current_word = self.words.pop(0)
         self.say(f"Please spell {self.current_word}.", True)
-        new_word = WordTry()
+        new_word = WordTry(self.current_word)
         new_word.set_active()
         self.query_one("#word_list").mount(new_word)
         new_word.focus()
