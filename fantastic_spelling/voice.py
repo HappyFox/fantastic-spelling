@@ -53,5 +53,5 @@ def say(utterance, queue=False):
 
 
 def stop():
-    _queue.put_nowait(False)
+    _queue.put(False)
     _voice_process.join()

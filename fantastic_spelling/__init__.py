@@ -1,6 +1,8 @@
 import asyncio
 import copy
+import yaml
 
+from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.containers import Container
@@ -25,6 +27,15 @@ WORD_LIST = [
     "eighteen",
     "straight",
 ]
+
+
+def load_word_list():
+    word_path = Path(Path.home(), "words.yaml")
+    if not word_path.is_file():
+        raise RuntimeError(f"Can't open the word list at : {word_path}")
+    with open(word_path, "r") as word_file:
+        word_list = yaml.safe_load(word_file)
+    return word_list
 
 
 class Say(Message):
@@ -116,6 +127,10 @@ class FansticSpellingApp(App):
         ("enter", "check_word", "Check you have the word correct."),
     ]
 
+    def __init__(self, word_list):
+        self.words = word_list
+        super().__init__()
+
     def action_say_word(self) -> None:
         if self._input_ready:
             self.say(self.current_word)
@@ -158,7 +173,6 @@ class FansticSpellingApp(App):
 
     def on_mount(self) -> None:
         self.init_tts()
-        self.words = copy.copy(WORD_LIST)
         self.next_word()
 
     def next_word(self):
@@ -215,7 +229,8 @@ class FansticSpellingApp(App):
 
 
 def run():
-    app = FansticSpellingApp()
+    word_list = load_word_list()
+    app = FansticSpellingApp(word_list)
     app.run()
 
 
