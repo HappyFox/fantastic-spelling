@@ -37,7 +37,8 @@ class Say(Message):
 class ResultDisplay(Static):
     "to display the current guess"
 
-    result_str = reactive("• • •")
+    # result_str = reactive("• • •")
+    result_str = reactive("•")
 
     def log_error(self) -> bool:
         self.result_str = self.result_str.replace("•", "❌", 1)
@@ -75,13 +76,6 @@ class WordTry(Static):
 
     def on_mount(self):
         self.set_word(self._word)
-
-        async def word_reset():
-            voice.say(spell_word(self._word), True)
-            await voice.speech_finished()
-            self.set_word("")
-
-        asyncio.create_task(word_reset())
 
     def set_active(self):
         self.add_class("active")
@@ -123,9 +117,13 @@ class FansticSpellingApp(App):
     ]
 
     def action_say_word(self) -> None:
-        self.say(self.current_word)
+        if self._input_ready:
+            self.say(self.current_word)
 
     async def action_check_word(self) -> None:
+        if not self._input_ready:
+            return
+
         word_try = self.query_one("WordTry.active")
 
         guess = word_try.get_word()
@@ -141,11 +139,7 @@ class FansticSpellingApp(App):
             if not word_try.log_error():
                 return
 
-            self.say(
-                f"You spell {self.current_word}: {spell_word(self.current_word)}.", True
-            )
-
-            self.words.append(self.current_word)
+            self.words.insert(0, self.current_word)
 
             word_try.remove_active()
 
@@ -168,13 +162,23 @@ class FansticSpellingApp(App):
         self.next_word()
 
     def next_word(self):
+        self._input_ready = False
         self.current_word = self.words.pop(0)
-        self.say(f"Please spell {self.current_word}.", True)
+
         new_word = WordTry(self.current_word)
         new_word.set_active()
         self.query_one("#word_list").mount(new_word)
         new_word.focus()
         new_word.scroll_visible()
+
+        async def word_reset():
+            self.say(f"Please spell {self.current_word}.", True)
+            voice.say(spell_word(self.current_word), True)
+            await voice.speech_finished()
+            self._input_ready = True
+            new_word.set_word("")
+
+        asyncio.create_task(word_reset())
 
     def init_tts(self) -> None:
         voice.start()
@@ -186,17 +190,22 @@ class FansticSpellingApp(App):
         yield Container(id="word_list")
 
     def on_key(self, event: events.Key) -> None:
-        if event.character and event.character.isalpha():
-            word_try = self.query_one("WordTry.active")
-            self.say(event.character, True)
-            word = word_try.get_word()
-            word += event.character
-            word_try.set_word(word)
-        elif event.key == "backspace":
-            word_try = self.query_one("WordTry.active")
-            word = word_try.get_word()
-            word = word[:-1]
-            word_try.set_word(word)
+        if self._input_ready:
+            if event.character and event.character.isalpha():
+                word_try = self.query_one("WordTry.active")
+
+                utter = event.character
+                if utter.isupper():
+                    utter = f"Capital {utter}"
+                self.say(utter, True)
+                word = word_try.get_word()
+                word += event.character
+                word_try.set_word(word)
+            elif event.key == "backspace":
+                word_try = self.query_one("WordTry.active")
+                word = word_try.get_word()
+                word = word[:-1]
+                word_try.set_word(word)
 
     def say(self, text, queue=False):
         voice.say(text, queue)

@@ -48,9 +48,10 @@ async def speech_finished():
 def say(utterance, queue=False):
     if _running_event.is_set() and not queue:
         return
+    _running_event.set()
     _queue.put_nowait(utterance)
 
 
 def stop():
-    _queue.put(False)
+    _queue.put_nowait(False)
     _voice_process.join()
