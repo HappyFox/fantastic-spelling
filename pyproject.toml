@@ -10,6 +10,7 @@ packages = [{include = "fantastic_spelling"}]
 python = "^3.9"
 textual = "^0.12.1"
 pyttsx3 = "^2.90"
+pyaml = "^21.10.1"
 
 
 [build-system]
