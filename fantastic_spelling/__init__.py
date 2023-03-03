@@ -13,21 +13,6 @@ from textual import events
 
 import fantastic_spelling.voice as voice
 
-WORD_LIST = [
-    "wait",
-    "May",
-    "Thursday",
-    "Saturday",
-    "main",
-    "hair",
-    "over",
-    "those",
-    "Monday",
-    "none",
-    "eighteen",
-    "straight",
-]
-
 
 def load_word_list():
     word_path = Path(Path.home(), "words.yaml")
