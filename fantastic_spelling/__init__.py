@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import time
 import yaml
 
 from pathlib import Path
@@ -21,6 +22,18 @@ def load_word_list():
     with open(word_path, "r") as word_file:
         word_list = yaml.safe_load(word_file)
     return word_list
+
+
+def log_run():
+    log_path = Path(Path.home(), "spelling_log.yaml")
+    log = []
+    if log_path.is_file():
+        with open(log_path, "r") as log_file:
+            log = yaml.safe_load(log_file)
+    log.append(time.asctime(time.localtime()))
+
+    with open(log_path, "w") as log_file:
+        log_file.write(yaml.dump(log))
 
 
 class Say(Message):
@@ -148,6 +161,8 @@ class FansticSpellingApp(App):
             return
 
         self.say("Practice complete, good job mate!", True)
+
+        log_run()
 
         await voice.speech_finished()
 
